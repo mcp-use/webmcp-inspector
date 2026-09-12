@@ -3,7 +3,7 @@ name: Release prebuilt extension
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, claude/ci-release-test]
   workflow_dispatch:
 
 permissions:
@@ -62,7 +62,7 @@ jobs:
 
   release:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/ci-release-test')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,13 +72,24 @@ jobs:
         with:
           name: webmcp-inspector-zip
 
+      - name: Resolve tag (scratch branch uses a throwaway prerelease tag)
+        id: tag
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/claude/ci-release-test" ]; then
+            echo "tag=v0.1.0-ci-test" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ needs.build.outputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check for an existing release
         id: existing
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          if gh release view "${{ needs.build.outputs.tag }}" >/dev/null 2>&1; then
+          if gh release view "${{ steps.tag.outputs.tag }}" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -88,9 +99,10 @@ jobs:
         if: steps.existing.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.build.outputs.tag }}
-          name: ${{ needs.build.outputs.tag }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
           files: webmcp-inspector.zip
+          prerelease: ${{ steps.tag.outputs.prerelease }}
 
       # A merge to main without a version bump must not fail the run. When the
       # release already exists we UPDATE its asset in place (--clobber) rather
@@ -102,4 +114,36 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release upload "${{ needs.build.outputs.tag }}" webmcp-inspector.zip --clobber
+          gh release upload "${{ steps.tag.outputs.tag }}" webmcp-inspector.zip --clobber
+
+      - name: Verify the published release and its asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.tag.outputs.tag }}"
+          gh release view "$TAG"
+          echo "--- assets via api ---"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" \
+            --jq '.prerelease, (.assets[] | "\(.name) \(.size) bytes updated=\(.updated_at)")'
+          rm -rf /tmp/dl && mkdir -p /tmp/dl
+          gh release download "$TAG" -D /tmp/dl --clobber
+          ls -l /tmp/dl
+          SIZE=$(stat -c%s /tmp/dl/webmcp-inspector.zip)
+          echo "downloaded asset size: $SIZE"
+          test "$SIZE" -gt 100000
+          echo "--- contents of the PUBLISHED zip ---"
+          unzip -l /tmp/dl/webmcp-inspector.zip
+          unzip -Z1 /tmp/dl/webmcp-inspector.zip | grep -qx 'manifest.json'
+          echo "manifest.json IS at the zip root"
+          unzip -p /tmp/dl/webmcp-inspector.zip manifest.json
+
+      # Scratch-branch safety net: if anything above failed, do not strand a
+      # test release/tag in the repo.
+      - name: Clean up test release on failure
+        if: failure() && github.ref == 'refs/heads/claude/ci-release-test'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release delete "${{ steps.tag.outputs.tag }}" --cleanup-tag --yes || true
