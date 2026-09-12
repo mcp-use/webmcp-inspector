@@ -3,7 +3,18 @@
 A standalone Chrome side panel for inspecting and debugging WebMCP tools, using
 copied mcp-use Inspector components. Built with WXT, React, TypeScript, and pnpm.
 
-<video src="https://raw.githubusercontent.com/mcp-use/webmcp-inspector/1af724b64461a5fec4a1f4ba01c3320cb7e7fc19/assets/webmcp-inspector-demo.mp4" controls muted playsinline width="100%"></video>
+<!--
+  Animated preview (assets/webmcp-inspector-demo.webp), generated from the original
+  recording at assets/webmcp-inspector-demo.mp4, which stays in the repo.
+
+  A real player with audio would need a <video> tag pointing at a GitHub attachment
+  URL, e.g.:
+      <video src="https://github.com/user-attachments/assets/<uuid>" controls></video>
+  That URL can only be minted by dragging the .mp4 into a PR or issue comment - it
+  cannot be derived from a path in the repo. Every <video> variant tried against a
+  raw/blob/relative URL was removed by GitHub's markdown sanitizer.
+-->
+![WebMCP Inspector: opening the side panel, filling in a tool's parameters, executing it, and browsing the page's tools](assets/webmcp-inspector-demo.webp)
 
 <!-- Swap this href for the Chrome Web Store listing URL once the extension is published there. -->
 [![Download for Chrome](https://img.shields.io/badge/Download_for_Chrome-prebuilt_extension-4285F4?style=flat&logo=googlechrome&logoColor=white)](https://github.com/mcp-use/webmcp-inspector/releases/latest/download/webmcp-inspector.zip)
