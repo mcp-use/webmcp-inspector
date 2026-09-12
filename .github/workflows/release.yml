@@ -41,7 +41,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
-      # Zip the *contents* of the build dir so manifest.json sits at the zip
+      # Zip the *contents* of the build dir (clobber-path re-run) so manifest.json sits at the zip
       # root, which is what Chrome load-unpacked and the Web Store expect.
       - name: Zip build output
         run: |
@@ -147,3 +147,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh release delete "${{ steps.tag.outputs.tag }}" --cleanup-tag --yes || true
+
+      - name: Remove the throwaway test release and tag
+        if: always() && github.ref == 'refs/heads/claude/ci-release-test'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete "${{ steps.tag.outputs.tag }}" --cleanup-tag --yes
+          echo "--- releases remaining ---"
+          gh release list || true
+          echo "--- tags remaining ---"
+          gh api "repos/$GITHUB_REPOSITORY/git/refs/tags" || echo "(no tags)"
