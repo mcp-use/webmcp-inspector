@@ -1,6 +1,6 @@
 {
   "name": "webmcp-inspector",
-  "description": "Inspect and test WebMCP tools in the Chrome side panel.",
+  "description": "Inspect and test WebMCP tools directly on your site",
   "private": true,
   "version": "0.1.0",
   "type": "module",
