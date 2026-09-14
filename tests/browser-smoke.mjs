@@ -102,7 +102,7 @@ try {
   console.log("Panel", await panel.locator("body").innerText());
   await mkdir("artifacts", { recursive: true });
   await expect(panel.locator(".app-header")).toHaveCount(0);
-  await expect(panel).toHaveTitle("mcp-use Inspector");
+  await expect(panel).toHaveTitle("WebMCP Inspector");
   await expect(panel.locator(".site-bar")).toHaveCount(0);
   await panel.screenshot({ path: "artifacts/tools.png" });
   if (registration !== "registered")

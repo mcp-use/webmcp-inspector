@@ -7,12 +7,12 @@ export default defineConfig({
   manifestVersion: 3,
   vite: () => ({ plugins: [tailwindcss()] }),
   manifest: {
-    name: "mcp-use Inspector",
+    name: "WebMCP Inspector",
     minimum_chrome_version: "116",
     permissions: ["sidePanel", "activeTab", "scripting", "storage"],
     icons: { 96: "icon.png" },
     action: {
-      default_title: "Open mcp-use Inspector",
+      default_title: "Open WebMCP Inspector",
       default_icon: "icon.png",
     },
   },
