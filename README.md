@@ -37,10 +37,14 @@ There is no MCP Apps rendering or remote MCP server connection.
 ## Page access and compatibility
 
 The production manifest requests `sidePanel`, `activeTab`, `scripting`, and
-`storage`. It does not request broad host permissions. An explicit `action.onClicked` handler opens the panel and grants
+`storage`, plus `<all_urls>` as an optional host permission the panel requests at
+runtime. An explicit `action.onClicked` handler opens the panel and grants
 access to the current site. Automatic `openPanelOnActionClick` is disabled because
-it can open the sidebar without granting `activeTab` (including in Helium). After switching to another site, click the toolbar
-icon again. Chrome internal pages and the Chrome Web Store cannot be inspected.
+it can open the sidebar without granting `activeTab` (including in Helium).
+Without the all-sites grant the per-tab `activeTab` grant is revoked on
+cross-origin navigation, so the toolbar icon has to be clicked again after
+switching sites; with it, the panel resyncs on its own. Chrome internal pages and
+the Chrome Web Store cannot be inspected.
 
 The adapter uses feature detection:
 

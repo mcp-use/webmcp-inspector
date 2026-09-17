@@ -10,6 +10,8 @@ export default defineConfig({
     name: "WebMCP Inspector",
     minimum_chrome_version: "116",
     permissions: ["sidePanel", "activeTab", "scripting", "storage"],
+    // Optional: activeTab alone is revoked on cross-origin navigation.
+    optional_host_permissions: ["<all_urls>"],
     icons: { 96: "icon.png" },
     action: {
       default_title: "Open WebMCP Inspector",

@@ -17,6 +17,7 @@ import { Input } from "@/src/components/ui/input";
 import { ToolsList } from "@/src/components/tools/ToolsList";
 import { SavedRequestsList } from "@/src/components/tools/SavedRequestsList";
 import { ToolDetail } from "@/src/components/tools/ToolDetail";
+import { useAllSitesAccess } from "@/src/hooks/useAllSitesAccess";
 import { useConnection } from "@/src/hooks/useConnection";
 import { useSavedRequests } from "@/src/hooks/useSavedRequests";
 import { deleteRequest } from "@/src/lib/saved-requests";
@@ -24,6 +25,7 @@ import type { SavedRequest } from "@/src/lib/types";
 
 export function App() {
   const { connection, error, loading, refresh } = useConnection();
+  const { granted: allSites, request: requestAllSites } = useAllSitesAccess();
   const { requests, error: storageError } = useSavedRequests();
   const [selection, setSelection] = useState<{
     name: string;
@@ -174,6 +176,8 @@ export function App() {
                   inspect its tools.
                 </p>
                 <p className="hint">
+                  Allowing all sites lets the panel reconnect on its own,
+                  without clicking the toolbar icon after each site change.
                   Browser settings pages and the Chrome Web Store cannot be
                   inspected.
                 </p>
@@ -181,6 +185,19 @@ export function App() {
                   <summary>Connection details</summary>
                   <p>{error}</p>
                 </details>
+                {allSites === false && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      void requestAllSites().then((ok) => {
+                        if (ok) void refresh();
+                      });
+                    }}
+                  >
+                    Allow on all sites
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
