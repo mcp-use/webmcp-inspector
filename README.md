@@ -3,17 +3,14 @@
 A standalone Chrome side panel for inspecting and debugging WebMCP tools, using
 copied mcp-use Inspector components. Built with WXT, React, TypeScript, and pnpm.
 
-## Use it
+## Install
 
-```sh
-pnpm install
-pnpm build
-```
+[Install WebMCP Inspector from the Chrome Web Store](https://chromewebstore.google.com/detail/webmcp-inspector/dgdidjgjofcenipdfaoebdeeppideadh).
+See the [WebMCP Inspector documentation](https://docs.mcp-use.com/inspector/webmcp-inspector)
+for setup details and troubleshooting.
 
-1. Open `chrome://extensions` and enable **Developer mode**.
-2. Choose **Load unpacked** and select `.output/chrome-mv3` in this repository.
-3. Open a WebMCP-enabled website and click the extension toolbar icon.
-4. Select a tool, enter parameters, and click **Execute** (or ⌘/Ctrl + Enter).
+1. Open a WebMCP-enabled website and click the extension toolbar icon.
+2. Select a tool, enter parameters, and click **Execute** (or ⌘/Ctrl + Enter).
 
 WebMCP is experimental. Enable **WebMCP for testing** in `chrome://flags` and
 relaunch a compatible Chromium build if the API is unavailable. The extension
