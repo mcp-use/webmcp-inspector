@@ -3,17 +3,36 @@
 A standalone Chrome side panel for inspecting and debugging WebMCP tools, using
 copied mcp-use Inspector components. Built with WXT, React, TypeScript, and pnpm.
 
-## Use it
+<!--
+  Animated preview (assets/webmcp-inspector-demo.webp), generated from the original
+  recording at assets/webmcp-inspector-demo.mp4, which stays in the repo.
 
-```sh
-pnpm install
-pnpm build
-```
+  A real player with audio would need a <video> tag pointing at a GitHub attachment
+  URL, e.g.:
+      <video src="https://github.com/user-attachments/assets/<uuid>" controls></video>
+  That URL can only be minted by dragging the .mp4 into a PR or issue comment - it
+  cannot be derived from a path in the repo. Every <video> variant tried against a
+  raw/blob/relative URL was removed by GitHub's markdown sanitizer.
+-->
+![WebMCP Inspector: opening the side panel, filling in a tool's parameters, executing it, and browsing the page's tools](assets/webmcp-inspector-demo.webp)
 
-1. Open `chrome://extensions` and enable **Developer mode**.
-2. Choose **Load unpacked** and select `.output/chrome-mv3` in this repository.
-3. Open a WebMCP-enabled website and click the extension toolbar icon.
-4. Select a tool, enter parameters, and click **Execute** (or ⌘/Ctrl + Enter).
+## Install
+
+[![Install for Chrome](https://img.shields.io/badge/Install_for_Chrome-Chrome_Web_Store-4285F4?style=flat&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/webmcp-inspector/dgdidjgjofcenipdfaoebdeeppideadh)
+
+[Install WebMCP Inspector from the Chrome Web Store](https://chromewebstore.google.com/detail/webmcp-inspector/dgdidjgjofcenipdfaoebdeeppideadh).
+See the [WebMCP Inspector documentation](https://docs.mcp-use.com/inspector/webmcp-inspector)
+for setup details and troubleshooting.
+
+1. Open a WebMCP-enabled website and click the extension toolbar icon.
+2. Select a tool, enter parameters, and click **Execute** (or ⌘/Ctrl + Enter).
+
+To install unpacked instead, download
+[`webmcp-inspector.zip`](https://github.com/mcp-use/webmcp-inspector/releases/latest/download/webmcp-inspector.zip)
+— the prebuilt extension from the latest release, refreshed on every merge to
+`main`. Unzip it, open `chrome://extensions`, enable **Developer mode**, and
+choose **Load unpacked** on the unzipped folder. To build it yourself, see
+[Development](#development) below.
 
 WebMCP is experimental. Enable **WebMCP for testing** in `chrome://flags` and
 relaunch a compatible Chromium build if the API is unavailable. The extension
