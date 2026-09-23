@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @source "../../src";
 @custom-variant dark (&:where(.dark, .dark *));
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/outfit-medium.ttf") format("truetype");
+}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -332,7 +339,7 @@ footer {
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 4px 12px 4px 16px;
   color: var(--muted-foreground);
   font-size: 10px;
@@ -475,4 +482,15 @@ footer {
 }
 .modal-fullscreen .results {
   flex: 1;
+}
+
+.manufact-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--foreground);
+  font-family: "Outfit", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
 }

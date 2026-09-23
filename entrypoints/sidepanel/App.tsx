@@ -10,6 +10,7 @@ import {
   PlugZap,
   CircleAlert,
 } from "lucide-react";
+import { McpUseLogo } from "@/src/components/McpUseLogo";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Input } from "@/src/components/ui/input";
@@ -268,6 +269,10 @@ export function App() {
         )}
       </main>
       <footer>
+        <span className="manufact-wordmark">
+          <McpUseLogo size="sm" />
+          <span>Manufact</span>
+        </span>
         <Button
           variant="ghost"
           size="icon-sm"
