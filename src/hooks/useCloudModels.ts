@@ -5,21 +5,41 @@ import { getAccessToken, MANUFACT_CLOUD_URL } from "../lib/manufact-auth";
 export const DEFAULT_MODEL_ID = "openai/gpt-5.6-luna";
 const STORAGE_KEY = "manufact:model";
 
+/** Like the Inspector's cloud picker, offer first-party providers only. */
+export const MODEL_PROVIDERS = ["openai", "anthropic", "google"] as const;
+export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
+
+export const PROVIDER_LABELS: Record<ModelProvider, string> = {
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  google: "Google",
+};
+
 export interface CloudModel {
   id: string;
   name: string;
   provider: string;
 }
 
+/** Cloud model ids are `provider/model`. */
+export function providerOf(id: string): string {
+  return id.split("/")[0] ?? "";
+}
+
+export function isAllowedModel(id: string): boolean {
+  return (MODEL_PROVIDERS as readonly string[]).includes(providerOf(id));
+}
+
 function storedModel(): string | null {
   try {
-    return localStorage.getItem(STORAGE_KEY);
+    const id = localStorage.getItem(STORAGE_KEY);
+    return id && isAllowedModel(id) ? id : null;
   } catch {
     return null;
   }
 }
 
-/** Strip the "Provider: " prefix OpenRouter puts on display names. */
+/** Strip the "Provider: " prefix the cloud's model catalog puts on display names. */
 export function modelLabel(model: CloudModel | undefined, id: string): string {
   if (!model) return id;
   const index = model.name.indexOf(": ");
@@ -55,10 +75,17 @@ export function useCloudModels(enabled: boolean) {
           defaultModelId?: string;
         };
         if (cancelled) return;
-        const list = data.models ?? [];
+        const list = (data.models ?? []).filter(
+          (m) =>
+            (MODEL_PROVIDERS as readonly string[]).includes(m.provider) &&
+            isAllowedModel(m.id),
+        );
         setModels(list);
         const ids = new Set(list.map((m) => m.id));
-        const fallback = data.defaultModelId ?? DEFAULT_MODEL_ID;
+        const fallback =
+          data.defaultModelId && isAllowedModel(data.defaultModelId)
+            ? data.defaultModelId
+            : DEFAULT_MODEL_ID;
         const stored = storedModel();
         if (stored && ids.has(stored)) setSelectedIdState(stored);
         else if (ids.has(fallback)) setSelectedIdState(fallback);

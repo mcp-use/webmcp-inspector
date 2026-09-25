@@ -85,8 +85,9 @@ user's Manufact organization credits. If the session expires, the tab asks the
 user to sign in again. The proxy also reports "login required" for accounts
 without an organization. In that case the panel stays signed in if the token
 still passes userinfo, and shows a notice instead. If credits run out or the
-cloud is unavailable, it also shows a notice. Models come from `/api/v1/models`, and the selected model is
-remembered.
+cloud is unavailable, it also shows a notice. Models come from `/api/v1/models`. As in the Inspector's cloud
+picker, only OpenAI, Anthropic, and Google models are offered, and the selected
+model is remembered.
 
 Cloud requests are cookieless and carry only the bearer token. Manufact Cloud's
 CORS policy does not allow `chrome-extension://` origins, so the manifest grants

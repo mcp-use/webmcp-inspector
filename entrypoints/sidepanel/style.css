@@ -575,27 +575,92 @@ footer {
   color: inherit;
   cursor: pointer;
 }
-.model-select {
-  max-width: 100%;
+/* Keep the intro and its suggestions in the middle of the empty thread. */
+.chat-intro {
+  min-height: 100%;
+  justify-content: center;
+}
+.model-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+  max-width: 100%;
   height: 28px;
-  padding: 0 6px;
+  padding: 0 8px 0 6px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 999px;
   background: transparent;
   color: var(--muted-foreground);
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 11px;
-  text-overflow: ellipsis;
   cursor: pointer;
 }
-.model-select:hover {
+.model-trigger:hover:not(:disabled) {
   color: var(--foreground);
   background: var(--hover);
 }
-.model-select option {
-  background: var(--surface);
+.model-trigger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.provider-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+.provider-tabs button {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.provider-tabs button[aria-selected="true"] {
+  background: var(--background);
   color: var(--foreground);
+  box-shadow: 0 1px 3px #0002;
+}
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: min(55dvh, 420px);
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+.model-list button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+}
+.model-list button:hover {
+  background: var(--hover);
+}
+.model-list button[aria-selected="true"] {
+  background: var(--accent);
 }
 .account-menu {
   position: absolute;

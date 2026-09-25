@@ -5,8 +5,9 @@ import { Button } from "../ui/button";
 import { McpUseLogo } from "../McpUseLogo";
 import { ChatInput } from "./ChatInput";
 import { MessageList } from "./MessageList";
+import { ModelPicker } from "./ModelPicker";
 import { useChat } from "@/src/hooks/useChat";
-import { modelLabel, useCloudModels } from "@/src/hooks/useCloudModels";
+import { useCloudModels } from "@/src/hooks/useCloudModels";
 import { useManufactAuth } from "@/src/hooks/useManufactAuth";
 import type { ChatNotice } from "@/src/lib/chat/notice";
 import type { Connection } from "@/src/lib/types";
@@ -66,13 +67,6 @@ export function ChatTab({ connection }: { connection: Connection | null }) {
 
   const available = !!connection && connection.api !== "unavailable";
   const toolCount = available ? connection.tools.length : 0;
-  const placeholder = !connection
-    ? "Connect a page to chat"
-    : !available
-      ? "WebMCP isn’t available on this page"
-      : toolCount
-        ? `Ask about ${toolCount} ${toolCount === 1 ? "tool" : "tools"} on this page`
-        : "Ask anything (this page has no tools yet)";
 
   return (
     <div className="chat">
@@ -112,7 +106,7 @@ export function ChatTab({ connection }: { connection: Connection | null }) {
         }}
       >
         {chat.messages.length === 0 ? (
-          <div className="empty-state">
+          <div className="empty-state chat-intro">
             <MessageSquare />
             <h2>Test tools in conversation</h2>
             <p>
@@ -161,30 +155,19 @@ export function ChatTab({ connection }: { connection: Connection | null }) {
         <ChatInput
           disabled={!available}
           loading={chat.loading}
-          placeholder={placeholder}
+          placeholder="Ask anything about this page."
           onSend={(text) => {
             pinned.current = true;
             void chat.send(text);
           }}
           onStop={chat.stop}
           controls={
-            <select
-              className="model-select"
-              aria-label="Model"
-              title="Model"
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
+            <ModelPicker
+              models={models}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
               disabled={chat.loading}
-            >
-              {!models.some((m) => m.id === selectedId) && (
-                <option value={selectedId}>{selectedId}</option>
-              )}
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {modelLabel(model, model.id)}
-                </option>
-              ))}
-            </select>
+            />
           }
         />
       </div>

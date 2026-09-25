@@ -57,9 +57,30 @@ await context.route("https://cloud.manufact.com/**", async (route) => {
             provider: "openai",
           },
           {
+            id: "openai/gpt-5.5-mini",
+            name: "OpenAI: GPT-5.5 Mini",
+            provider: "openai",
+          },
+          {
             id: "anthropic/claude-sonnet-5",
             name: "Anthropic: Claude Sonnet 5",
             provider: "anthropic",
+          },
+          {
+            id: "google/gemini-3-pro",
+            name: "Google: Gemini 3 Pro",
+            provider: "google",
+          },
+          // Other catalog providers must not be offered.
+          {
+            id: "meta-llama/llama-4-maverick",
+            name: "Meta: Llama 4 Maverick",
+            provider: "meta-llama",
+          },
+          {
+            id: "openrouter/auto",
+            name: "Auto Router",
+            provider: "openrouter",
           },
         ],
       },
@@ -182,8 +203,28 @@ try {
     }),
   );
   await expect(panel.getByTestId("chat-input")).toBeVisible();
-  await expect(panel.getByLabel("Model")).toHaveValue("openai/gpt-5.6-luna");
+  const picker = panel.getByTestId("chat-model-picker");
+  await expect(picker).toHaveText("GPT-5.6 Luna");
+  await expect(panel.getByTestId("chat-input")).toHaveAttribute(
+    "placeholder",
+    "Ask anything about this page.",
+  );
   await panel.screenshot({ path: `${out}/chat-empty.png` });
+  await picker.click();
+  const dialog = panel.getByRole("dialog", { name: "Choose a model" });
+  await expect(dialog.getByRole("tab")).toHaveText([
+    "OpenAI",
+    "Anthropic",
+    "Google",
+  ]);
+  await expect(dialog.getByRole("option")).toHaveCount(2);
+  await panel.screenshot({ path: `${out}/chat-model-picker.png` });
+  await dialog.getByRole("tab", { name: "Google" }).click();
+  await expect(dialog.getByRole("option")).toHaveText([/Gemini 3 Pro/]);
+  await dialog.getByRole("tab", { name: "Anthropic" }).click();
+  await dialog.getByRole("option", { name: /Claude Sonnet 5/ }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(picker).toHaveText("Claude Sonnet 5");
   await panel.getByTestId("chat-input").fill("Add two mushrooms");
   await panel.getByTestId("chat-input").press("Enter");
   await expect(panel.getByText("I added")).toBeVisible();
@@ -208,7 +249,7 @@ try {
   await panel.screenshot({ path: `${out}/chat-narrow.png` });
   const [first, second] = bodies;
   expect(first.auth).toBe("Bearer fake-token");
-  expect(first.body.model).toBe("openai/gpt-5.6-luna");
+  expect(first.body.model).toBe("anthropic/claude-sonnet-5");
   expect(first.body.tools.map((t) => t.function.name)).toEqual(["add_topping"]);
   expect(first.body.messages[0].content).toContain("Page title: Pizza shop");
   expect(second.body.messages.at(-1)).toEqual({
@@ -218,7 +259,7 @@ try {
   });
   if (errors.length) throw new Error(`Panel errors: ${errors.join("; ")}`);
   console.log(
-    "PASS: sign-in gate, model list, streamed tool call executed in page, tool result returned, tabs, dark/narrow layout",
+    "PASS: sign-in gate, provider-filtered model picker, streamed tool call executed in page, tool result returned, tabs, dark/narrow layout",
   );
 } finally {
   await context.close();
