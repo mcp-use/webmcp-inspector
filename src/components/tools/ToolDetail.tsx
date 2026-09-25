@@ -64,6 +64,7 @@ export function ToolDetail({
   const [fullscreen, setFullscreen] = useState(false);
   const alive = useRef(true);
   const busy = useRef(false);
+  const root = useRef<HTMLElement>(null);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -126,7 +127,9 @@ export function ToolDetail({
       if (
         (event.metaKey || event.ctrlKey) &&
         event.key === "Enter" &&
-        !document.querySelector("dialog[open]")
+        !document.querySelector("dialog[open]") &&
+        // Stay mounted but inert while another tab (Chat) is shown.
+        !root.current?.closest("[hidden]")
       ) {
         event.preventDefault();
         void runRef.current();
@@ -245,7 +248,7 @@ export function ToolDetail({
     </div>
   );
   return (
-    <section className="detail">
+    <section className="detail" ref={root}>
       <ResizablePanelGroup orientation="vertical" id="tool-layout">
         <ResizablePanel id="parameters" defaultSize="60%" minSize="20%">
           <div className="parameters-pane">
