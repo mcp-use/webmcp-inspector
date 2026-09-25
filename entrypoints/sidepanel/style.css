@@ -531,9 +531,11 @@ footer {
   flex: 1;
   min-height: 0;
 }
+/* Signed-out and loading states sit in the middle of the panel. */
 .chat-panel > .empty-state {
   height: 100%;
   overflow-y: auto;
+  justify-content: center;
 }
 .chat {
   height: 100%;
