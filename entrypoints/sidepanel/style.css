@@ -494,3 +494,132 @@ footer {
   font-weight: 500;
   line-height: 1;
 }
+
+/* Tools / Chat view switcher. */
+.tabs {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 8px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.tabs button:hover {
+  color: var(--foreground);
+}
+.tabs button[aria-selected="true"] {
+  color: var(--foreground);
+  border-bottom-color: var(--foreground);
+}
+
+/* Chat: header, scrolling thread, pinned composer. */
+.chat-panel {
+  flex: 1;
+  min-height: 0;
+}
+.chat-panel > .empty-state {
+  height: 100%;
+  overflow-y: auto;
+}
+.chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.chat > .list-toolbar {
+  flex-shrink: 0;
+}
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.chat-composer {
+  flex-shrink: 0;
+  padding: 8px 12px 12px;
+}
+.chat-notice {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid #f59e0b66;
+  background: #f59e0b14;
+  border-radius: 8px;
+  color: var(--foreground);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.chat-notice a,
+.chat-notice button {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.model-select {
+  max-width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.model-select:hover {
+  color: var(--foreground);
+  background: var(--hover);
+}
+.model-select option {
+  background: var(--surface);
+  color: var(--foreground);
+}
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  width: 220px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px #0003;
+}
+.account-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  cursor: pointer;
+}
+.account-menu button:hover {
+  background: var(--hover);
+}

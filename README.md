@@ -2,6 +2,8 @@
 
 A standalone Chrome side panel for inspecting and debugging WebMCP tools, using
 copied mcp-use Inspector components. Built with WXT, React, TypeScript, and pnpm.
+It has two tabs: **Tools** for running tools by hand, and **Chat** for testing
+them through a model backed by Manufact Cloud.
 
 ## Use it
 
@@ -14,6 +16,8 @@ pnpm build
 2. Choose **Load unpacked** and select `.output/chrome-mv3` in this repository.
 3. Open a WebMCP-enabled website and click the extension toolbar icon.
 4. Select a tool, enter parameters, and click **Execute** (or ⌘/Ctrl + Enter).
+5. To test the tools in conversation, open **Chat**, click **Sign in with
+   Manufact**, and ask the model to use them.
 
 WebMCP is experimental. Enable **WebMCP for testing** in `chrome://flags` and
 relaunch a compatible Chromium build if the API is unavailable. The extension
@@ -31,13 +35,47 @@ Native end-to-end tests currently run against Chrome for Testing 149.0.7827.55.
 - Named saved requests stored locally and scoped to the website's origin.
 - Automatic refresh on tool registration/removal events, tab changes, and page loads.
 - Light/dark themes, persisted locally.
+- A Chat tab ported from the mcp-use Inspector chat. It streams responses from
+  Manufact Cloud and exposes the page's WebMCP tools to the model (see below).
 
 There is no MCP Apps rendering or remote MCP server connection.
 
+## Chat with Manufact Cloud
+
+The Chat tab uses the same Manufact Cloud LLM proxy as the mcp-use Inspector
+when it runs tools locally. The model runs in the cloud and tool calls run in
+the browser:
+
+1. **Sign in.** OAuth 2.1 authorization code with PKCE through
+   `chrome.identity.launchWebAuthFlow`. The extension registers itself with
+   dynamic client registration, using `https://<extension-id>.chromiumapp.org/manufact`
+   as its redirect URI. Tokens are kept in `chrome.storage.local` and refreshed
+   before they expire. Refresh tokens rotate, so panels in different windows
+   refresh under one Web Lock.
+2. **Chat.** Each turn is an OpenAI-compatible Chat Completions request to
+   `/api/v1/inspector/llm/chat/completions` with a bearer token. The page's
+   tools are sent as functions. Names are sanitized to the OpenAI function-name
+   grammar and deduplicated.
+3. **Tool calls.** The panel validates each call's arguments against the tool's
+   schema and then runs the tool through the same path as **Execute**. Calls
+   run one at a time, and each result goes back to the model. A turn is capped
+   at 10 model steps. **Stop** aborts the turn; no further tool calls start.
+
+Signing in is required: the proxy has no anonymous tier. Usage is billed to the
+user's Manufact organization credits. If the session expires, the tab asks the
+user to sign in again. If credits run out or the cloud is unavailable, it shows
+a notice. Models come from `/api/v1/models`, and the selected model is
+remembered.
+
+Cloud requests are cookieless and carry only the bearer token. Manufact Cloud's
+CORS policy does not allow `chrome-extension://` origins, so the manifest grants
+the cloud host. Chrome does not apply CORS to extension pages for granted hosts.
+
 ## Page access and compatibility
 
-The production manifest requests `sidePanel`, `activeTab`, `scripting`, and
-`storage`. It does not request broad host permissions. An explicit `action.onClicked` handler opens the panel and grants
+The production manifest requests `sidePanel`, `activeTab`, `scripting`,
+`storage`, and `identity` (for Manufact sign-in), plus host access to
+`https://cloud.manufact.com/*` only. It does not request broad host permissions. An explicit `action.onClicked` handler opens the panel and grants
 access to the current site. Automatic `openPanelOnActionClick` is disabled because
 it can open the sidebar without granting `activeTab` (including in Helium). After switching to another site, click the toolbar
 icon again. Chrome internal pages and the Chrome Web Store cannot be inspected.
@@ -70,18 +108,22 @@ Use Node 22.12+ and pnpm 10.33.0.
 pnpm dev            # WXT development build + hot reload
 pnpm typecheck
 pnpm test           # Schema and page-adapter regression tests
-pnpm test:browser   # Build + real extension/native WebMCP browser tests
+pnpm test:browser   # Build + real extension/native WebMCP browser tests (incl. chat against a mocked cloud)
 pnpm zip           # Production zip in .output
 ```
 
-For development, load `.output/chrome-mv3-dev` in the browser. WXT browser
+For development, load `.output/chrome-mv3-dev` in the browser. Set
+`WXT_MANUFACT_CLOUD_URL` (for example `https://cloud.dev.manufact.com`) when
+building to point Chat and its host permission at another Manufact Cloud. WXT browser
 auto-launch is disabled so you can use your existing logged-in profile.
 
 The browser suite launches a separate temporary profile. It copies the production
 build and adds **test-only localhost permission** to that copy, avoiding toolbar
 UI automation for activeTab grants. It tests native registration, validation,
 execution, saved request load/delete/persistence, live changes, navigation,
-resizing/fullscreen, and narrow layout. Screenshots are written to `artifacts/`.
+resizing/fullscreen, and narrow layout. The chat suite mocks Manufact Cloud,
+streams a tool call, and checks that the call runs the page's real tool and
+that the result goes back to the model. Screenshots are written to `artifacts/`.
 Set `CHROME_PATH` to a compatible Chrome for Testing executable, or install
 Playwright Chromium with `pnpm exec playwright install chromium`.
 
@@ -94,6 +136,11 @@ Playwright Chromium with `pnpm exec playwright install chromium`.
 - `src/lib/bridge.ts`: extension scripting and document-scoped requests.
 - `src/hooks/useConnection.ts`: connection and live update lifecycle.
 - `src/lib/saved-requests.ts`: local storage records.
+- `src/components/chat/`: chat UI ported from the Inspector (messages, markdown,
+  tool calls, composer).
+- `src/lib/chat/`: OpenAI-compatible streaming client, tool loop, transcript
+  conversion, WebMCP tool bridge, and cloud error notices.
+- `src/lib/manufact-auth.ts`: Manufact OAuth (PKCE + dynamic client registration).
 - `THIRD_PARTY_NOTICES.md`: retained mcp-use MIT license and attribution.
 
 No workspace imports or runtime dependency on mcp-use.
