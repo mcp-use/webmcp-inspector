@@ -188,7 +188,10 @@ describe("openAIChatDriver", () => {
       driver.stream({ messages: [], tools: [] }),
     ).catch((e) => e);
     expect(error).toBeInstanceOf(LlmRequestError);
-    expect(noticeFromError(error)).toEqual({ kind: "login_required" });
+    expect(noticeFromError(error)).toEqual({
+      kind: "login_required",
+      loginUrl: "https://x",
+    });
   });
 });
 

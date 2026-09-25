@@ -322,9 +322,28 @@ export async function signOut(): Promise<void> {
   }
 }
 
-/** Clear a session the cloud no longer accepts. */
-export async function forgetSession(): Promise<void> {
+/**
+ * Called when the LLM proxy says login is required. The proxy answers that for
+ * both an invalid token and a signed-in user without an organization, so only
+ * drop the session when userinfo rejects the token too.
+ * Returns whether the session was kept.
+ */
+export async function recheckSession(): Promise<boolean> {
+  const session = await read<ManufactSession>(SESSION_KEY);
+  if (!session) return false;
+  try {
+    const metadata = await discover();
+    if (!metadata.userinfo_endpoint) return true;
+    const response = await cloudFetch(metadata.userinfo_endpoint, {
+      headers: { Authorization: `Bearer ${session.tokens.access_token}` },
+    });
+    if (response.status !== 401 && response.status !== 403) return true;
+  } catch {
+    // Network trouble is not proof the token is bad.
+    return true;
+  }
   await browser.storage.local.remove(SESSION_KEY);
+  return false;
 }
 
 export function onSessionChange(listener: () => void): () => void {

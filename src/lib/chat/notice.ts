@@ -4,7 +4,7 @@ import { LlmRequestError } from "./llm";
 
 export type ChatNotice =
   | { kind: "cloud_unavailable" }
-  | { kind: "login_required" }
+  | { kind: "login_required"; loginUrl?: string }
   | { kind: "credits_exhausted"; billingUrl?: string; message: string };
 
 const CREDITS = "You've used your organization's included Manufact credits.";
@@ -31,7 +31,10 @@ export function noticeFromError(error: unknown): ChatNotice | null {
           ? body.billingUrl
           : undefined;
     if (error.status === 401 || body.loginRequired)
-      return { kind: "login_required" };
+      return {
+        kind: "login_required",
+        loginUrl: typeof body.loginUrl === "string" ? body.loginUrl : undefined,
+      };
     if (error.status === 402 || body.creditsExhausted)
       return { kind: "credits_exhausted", billingUrl, message };
     if (error.status === 429)

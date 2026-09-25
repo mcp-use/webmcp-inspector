@@ -265,12 +265,20 @@ function NoticeBanner({
     <p role="status" className="chat-notice" data-testid="chat-managed-notice">
       {notice.kind === "cloud_unavailable" &&
         "Manufact Cloud chat is currently unavailable. Try again shortly."}
+      {/* Shown only while still signed in: an invalid token signs the panel out. */}
       {notice.kind === "login_required" && (
         <>
-          Your Manufact session expired.{" "}
-          <button type="button" onClick={onSignIn}>
-            Sign in again
-          </button>
+          Manufact Cloud didn’t accept this account for chat. Finish setting up
+          your account and organization, then try again.{" "}
+          {notice.loginUrl ? (
+            <a href={notice.loginUrl} target="_blank" rel="noopener noreferrer">
+              Open Manufact
+            </a>
+          ) : (
+            <button type="button" onClick={onSignIn}>
+              Sign in again
+            </button>
+          )}
         </>
       )}
       {notice.kind === "credits_exhausted" && (

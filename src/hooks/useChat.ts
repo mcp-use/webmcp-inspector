@@ -15,7 +15,7 @@ import {
   systemPrompt,
 } from "../lib/chat/webmcp-tools";
 import {
-  forgetSession,
+  recheckSession,
   getAccessToken,
   MANUFACT_CLOUD_URL,
 } from "../lib/manufact-auth";
@@ -97,7 +97,8 @@ export function useChat(connection: Connection | null, model: string) {
       } catch (error) {
         if (!controller.signal.aborted) {
           const next = noticeFromError(error);
-          if (next?.kind === "login_required") await forgetSession();
+          // Signs the panel out unless the token is still valid (e.g. no organization yet).
+          if (next?.kind === "login_required") await recheckSession();
           if (next) setNotice(next);
           else setError(error instanceof Error ? error.message : String(error));
         }

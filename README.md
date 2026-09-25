@@ -63,8 +63,10 @@ the browser:
 
 Signing in is required: the proxy has no anonymous tier. Usage is billed to the
 user's Manufact organization credits. If the session expires, the tab asks the
-user to sign in again. If credits run out or the cloud is unavailable, it shows
-a notice. Models come from `/api/v1/models`, and the selected model is
+user to sign in again. The proxy also reports "login required" for accounts
+without an organization. In that case the panel stays signed in if the token
+still passes userinfo, and shows a notice instead. If credits run out or the
+cloud is unavailable, it also shows a notice. Models come from `/api/v1/models`, and the selected model is
 remembered.
 
 Cloud requests are cookieless and carry only the bearer token. Manufact Cloud's
@@ -112,9 +114,11 @@ pnpm test:browser   # Build + real extension/native WebMCP browser tests (incl. 
 pnpm zip           # Production zip in .output
 ```
 
-For development, load `.output/chrome-mv3-dev` in the browser. Set
-`WXT_MANUFACT_CLOUD_URL` (for example `https://cloud.dev.manufact.com`) when
-building to point Chat and its host permission at another Manufact Cloud. WXT browser
+For development, load `.output/chrome-mv3-dev` in the browser. To point Chat
+at another Manufact Cloud, export `WXT_MANUFACT_CLOUD_URL` (for example
+`https://cloud.dev.manufact.com`) in the shell that runs the build. The
+manifest's host permission reads the process environment, so setting it only
+in `.env` is not enough. WXT browser
 auto-launch is disabled so you can use your existing logged-in profile.
 
 The browser suite launches a separate temporary profile. It copies the production
