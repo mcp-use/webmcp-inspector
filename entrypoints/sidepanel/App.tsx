@@ -9,6 +9,7 @@ import {
   Bookmark,
   PlugZap,
   CircleAlert,
+  MessageSquare,
 } from "lucide-react";
 import { McpUseLogo } from "@/src/components/McpUseLogo";
 import { Button } from "@/src/components/ui/button";
@@ -17,13 +18,32 @@ import { Input } from "@/src/components/ui/input";
 import { ToolsList } from "@/src/components/tools/ToolsList";
 import { SavedRequestsList } from "@/src/components/tools/SavedRequestsList";
 import { ToolDetail } from "@/src/components/tools/ToolDetail";
+import { ChatTab } from "@/src/components/chat/ChatTab";
 import { useConnection } from "@/src/hooks/useConnection";
 import { useSavedRequests } from "@/src/hooks/useSavedRequests";
 import { deleteRequest } from "@/src/lib/saved-requests";
 import type { SavedRequest } from "@/src/lib/types";
 
+type Tab = "tools" | "chat";
+
+function storedTab(): Tab {
+  try {
+    return localStorage.getItem("tab") === "chat" ? "chat" : "tools";
+  } catch {
+    return "tools";
+  }
+}
+
 export function App() {
   const { connection, error, loading, refresh } = useConnection();
+  const [tab, setTab] = useState<Tab>(storedTab);
+  useEffect(() => {
+    try {
+      localStorage.setItem("tab", tab);
+    } catch {
+      // A remembered tab is a convenience.
+    }
+  }, [tab]);
   const { requests, error: storageError } = useSavedRequests();
   const [selection, setSelection] = useState<{
     name: string;
@@ -78,7 +98,33 @@ export function App() {
   }
   return (
     <div className="inspector">
-      <main>
+      <nav className="tabs" role="tablist" aria-label="Views">
+        {(
+          [
+            ["tools", Wrench, "Tools"],
+            ["chat", MessageSquare, "Chat"],
+          ] as const
+        ).map(([id, Icon, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            id={`tab-${id}`}
+            aria-selected={tab === id}
+            aria-controls={`panel-${id}`}
+            onClick={() => setTab(id)}
+          >
+            <Icon size={13} />
+            {label}
+          </button>
+        ))}
+      </nav>
+      <main
+        id="panel-tools"
+        role="tabpanel"
+        aria-labelledby="tab-tools"
+        hidden={tab !== "tools"}
+      >
         {selectedTool && connection ? (
           <ToolDetail
             key={`${connection.documentId}:${selectedTool.name}:${JSON.stringify(selectedTool.inputSchema)}:${selection?.saved?.id ?? ""}`}
@@ -268,6 +314,16 @@ export function App() {
           </>
         )}
       </main>
+      {/* Kept mounted while hidden so the conversation survives tab switches. */}
+      <section
+        id="panel-chat"
+        role="tabpanel"
+        aria-labelledby="tab-chat"
+        className="chat-panel"
+        hidden={tab !== "chat"}
+      >
+        <ChatTab connection={connection} />
+      </section>
       <footer>
         <span className="manufact-wordmark">
           <McpUseLogo size="sm" />

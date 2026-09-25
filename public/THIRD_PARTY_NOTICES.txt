@@ -1,6 +1,6 @@
 # mcp-use Inspector
 
-Components in src/components and supporting shape, surface, animation, and schema utilities are copied or adapted from mcp-use/libraries/typescript/packages/inspector.
+Components in src/components (including the chat UI in src/components/chat) and supporting shape, surface, animation, schema, and Manufact authentication utilities are copied or adapted from mcp-use/libraries/typescript/packages/inspector. The streaming chat client and tool loop in src/lib/chat are adapted from mcp-use/libraries/typescript/packages/agent.
 
 MIT License
 

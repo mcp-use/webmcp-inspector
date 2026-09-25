@@ -2,7 +2,7 @@
   "name": "webmcp-inspector",
   "description": "Inspect and test WebMCP tools directly on your site",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare",
     "test": "vitest run",
-    "test:browser": "pnpm build && node tests/browser-smoke.mjs"
+    "test:browser": "pnpm build && node tests/browser-smoke.mjs && node tests/browser-chat.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -19,6 +19,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.45.0",
+    "markdown-to-jsx": "^9.10.3",
     "motion": "^13.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
