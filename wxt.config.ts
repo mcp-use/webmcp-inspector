@@ -15,6 +15,8 @@ export default defineConfig({
     name: "WebMCP Inspector",
     minimum_chrome_version: "116",
     permissions: ["sidePanel", "activeTab", "scripting", "storage", "identity"],
+    // Optional: activeTab alone is revoked on cross-origin navigation.
+    optional_host_permissions: ["<all_urls>"],
     // Extension pages skip CORS for granted hosts; the cloud does not allow
     // chrome-extension:// origins.
     host_permissions: [`${cloud.origin}/*`],

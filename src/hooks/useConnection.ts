@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { browser } from "wxt/browser";
 import { connect } from "../lib/bridge";
+import {
+  CONNECT_TIMEOUT_MS,
+  isActiveTabLoad,
+  refreshStart,
+  shouldPoll,
+  withTimeout,
+  type RefreshOptions,
+} from "../lib/refresh-policy";
 import type { Connection } from "../lib/types";
 
 export function useConnection() {
@@ -10,13 +18,20 @@ export function useConnection() {
   const generation = useRef(0);
   const current = useRef<Connection | null>(null);
   const windowId = useRef<number | undefined>(undefined);
-  const refresh = useCallback(async (invalidate = false) => {
+  const activeTabId = useRef<number | undefined>(undefined);
+  const inFlight = useRef(false);
+  const refresh = useCallback(async (options: RefreshOptions = {}) => {
     const ticket = ++generation.current;
+    const { invalidate, show } = refreshStart(options);
+    inFlight.current = true;
     if (invalidate) {
       current.current = null;
       setConnection(null);
     }
-    setLoading(true);
+    if (show) {
+      setError("");
+      setLoading(true);
+    }
     try {
       if (windowId.current === undefined)
         windowId.current = (await browser.windows.getCurrent()).id;
@@ -28,7 +43,12 @@ export function useConnection() {
         throw new Error(
           "Open a website and click the extension toolbar icon to connect.",
         );
-      const next = await connect(tab.id);
+      activeTabId.current = tab.id;
+      const next = await withTimeout(
+        connect(tab.id),
+        CONNECT_TIMEOUT_MS,
+        "The page didn’t respond. Retrying…",
+      );
       if (ticket !== generation.current) return;
       current.current = next;
       setConnection((previous) =>
@@ -41,14 +61,19 @@ export function useConnection() {
       setConnection(null);
       setError(error instanceof Error ? error.message : String(error));
     } finally {
-      if (ticket === generation.current) setLoading(false);
+      if (ticket === generation.current) {
+        inFlight.current = false;
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     void refresh();
-    const activated = (info: { windowId: number }) => {
-      if (info.windowId === windowId.current) void refresh(true);
+    const activated = (info: { windowId: number; tabId: number }) => {
+      if (info.windowId !== windowId.current) return;
+      activeTabId.current = info.tabId;
+      void refresh({ invalidate: true });
     };
     const updated = (
       tabId: number,
@@ -57,14 +82,19 @@ export function useConnection() {
       if (current.current?.tabId !== tabId) return;
       if (change.status === "loading") {
         ++generation.current;
+        inFlight.current = false;
         current.current = null;
         setConnection(null);
         setLoading(true);
       }
     };
-    // Query the active tab after any completed load; activeTab survives same-origin navigations.
-    const completed = (_: number, change: { status?: string }) => {
-      if (change.status === "complete") void refresh();
+    // Query the active tab after its own completed load; activeTab survives same-origin navigations.
+    const completed = (tabId: number, change: { status?: string }) => {
+      if (
+        change.status === "complete" &&
+        isActiveTabLoad(activeTabId.current, tabId)
+      )
+        void refresh();
     };
     const message = (
       msg: unknown,
@@ -90,8 +120,10 @@ export function useConnection() {
     browser.runtime.onMessage.addListener(message);
     // Handles APIs/polyfills installed after page load and permission granted by a later toolbar click.
     const interval = setInterval(() => {
-      if (!current.current || current.current.api === "unavailable")
-        void refresh();
+      if (
+        shouldPoll({ inFlight: inFlight.current, connection: current.current })
+      )
+        void refresh({ background: true });
     }, 2500);
     return () => {
       ++generation.current;

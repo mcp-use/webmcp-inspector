@@ -19,6 +19,7 @@ import { ToolsList } from "@/src/components/tools/ToolsList";
 import { SavedRequestsList } from "@/src/components/tools/SavedRequestsList";
 import { ToolDetail } from "@/src/components/tools/ToolDetail";
 import { ChatTab } from "@/src/components/chat/ChatTab";
+import { useAllSitesAccess } from "@/src/hooks/useAllSitesAccess";
 import { useConnection } from "@/src/hooks/useConnection";
 import { useSavedRequests } from "@/src/hooks/useSavedRequests";
 import { deleteRequest } from "@/src/lib/saved-requests";
@@ -36,6 +37,7 @@ function storedTab(): Tab {
 
 export function App() {
   const { connection, error, loading, refresh } = useConnection();
+  const { granted: allSites, request: requestAllSites } = useAllSitesAccess();
   const [tab, setTab] = useState<Tab>(storedTab);
   useEffect(() => {
     try {
@@ -220,6 +222,8 @@ export function App() {
                   inspect its tools.
                 </p>
                 <p className="hint">
+                  {allSites === false &&
+                    "Allowing all sites lets the panel reconnect on its own, without clicking the toolbar icon after each site change. "}
                   Browser settings pages and the Chrome Web Store cannot be
                   inspected.
                 </p>
@@ -227,6 +231,26 @@ export function App() {
                   <summary>Connection details</summary>
                   <p>{error}</p>
                 </details>
+                {allSites === false && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setMessage("");
+                      requestAllSites()
+                        .then((ok) => {
+                          if (ok) void refresh();
+                        })
+                        .catch((error: unknown) =>
+                          setMessage(
+                            `Could not request access: ${error instanceof Error ? error.message : String(error)}`,
+                          ),
+                        );
+                    }}
+                  >
+                    Allow on all sites
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"

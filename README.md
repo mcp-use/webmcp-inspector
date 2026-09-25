@@ -97,10 +97,17 @@ the cloud host. Chrome does not apply CORS to extension pages for granted hosts.
 
 The production manifest requests `sidePanel`, `activeTab`, `scripting`,
 `storage`, and `identity` (for Manufact sign-in), plus host access to
-`https://cloud.manufact.com/*` only. It does not request broad host permissions. An explicit `action.onClicked` handler opens the panel and grants
-access to the current site. Automatic `openPanelOnActionClick` is disabled because
-it can open the sidebar without granting `activeTab` (including in Helium). After switching to another site, click the toolbar
-icon again. Chrome internal pages and the Chrome Web Store cannot be inspected.
+`https://cloud.manufact.com/*` only. No broad host permission is granted at
+install time: `<all_urls>` is listed as an *optional* host permission that the
+panel requests at runtime, from the click on **Allow on all sites**, and the
+user can decline or revoke it. An explicit `action.onClicked` handler opens the
+panel and grants access to the current site. Automatic `openPanelOnActionClick`
+is disabled because it can open the sidebar without granting `activeTab`
+(including in Helium).
+Without the all-sites grant the per-tab `activeTab` grant is revoked on
+cross-origin navigation, so the toolbar icon has to be clicked again after
+switching sites; with it, the panel resyncs on its own. Chrome internal pages and
+the Chrome Web Store cannot be inspected.
 
 The adapter uses feature detection:
 
