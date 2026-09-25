@@ -12,10 +12,7 @@ import { useManufactAuth } from "@/src/hooks/useManufactAuth";
 import type { ChatNotice } from "@/src/lib/chat/notice";
 import type { Connection } from "@/src/lib/types";
 
-const SUGGESTIONS = [
-  "What can this page's tools do?",
-  "Try each tool with example inputs",
-];
+const SUGGESTIONS = ["What can this page's tools do?"];
 
 export function ChatTab({ connection }: { connection: Connection | null }) {
   const auth = useManufactAuth();
