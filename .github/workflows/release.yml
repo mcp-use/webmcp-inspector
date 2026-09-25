@@ -1,0 +1,105 @@
+name: Release prebuilt extension
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build extension
+        run: pnpm build
+
+      # package.json is the source of truth for the version; WXT copies it into
+      # the generated manifest, so the built manifest is read back here.
+      - name: Read extension version
+        id: version
+        run: |
+          version=$(node -p "require('./.output/chrome-mv3/manifest.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      # Zip the *contents* of the build dir so manifest.json sits at the zip
+      # root, which is what Chrome load-unpacked and the Web Store expect.
+      - name: Zip build output
+        run: |
+          cd .output/chrome-mv3
+          zip -r "$GITHUB_WORKSPACE/webmcp-inspector.zip" .
+          cd "$GITHUB_WORKSPACE"
+          unzip -l webmcp-inspector.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webmcp-inspector-zip
+          path: webmcp-inspector.zip
+          if-no-files-found: error
+
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webmcp-inspector-zip
+
+      - name: Check for an existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "${{ needs.build.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release
+        if: steps.existing.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: ${{ needs.build.outputs.tag }}
+          files: webmcp-inspector.zip
+
+      # A merge to main without a version bump must not fail the run. When the
+      # release already exists we UPDATE its asset in place (--clobber) rather
+      # than skipping, so releases/latest/download/webmcp-inspector.zip always
+      # serves a build of the current main.
+      - name: Update existing release asset
+        if: steps.existing.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload "${{ needs.build.outputs.tag }}" webmcp-inspector.zip --clobber
