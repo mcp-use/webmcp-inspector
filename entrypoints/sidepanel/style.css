@@ -604,6 +604,22 @@ footer {
   opacity: 0.5;
   cursor: default;
 }
+.model-search {
+  position: relative;
+  margin-bottom: 10px;
+}
+.model-search > svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+.model-search input {
+  padding-left: 32px;
+  font-size: 12px;
+}
 .provider-tabs {
   display: flex;
   gap: 4px;

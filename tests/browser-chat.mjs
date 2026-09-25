@@ -219,6 +219,16 @@ try {
   ]);
   await expect(dialog.getByRole("option")).toHaveCount(2);
   await panel.screenshot({ path: `${out}/chat-model-picker.png` });
+  const search = dialog.getByLabel("Search models");
+  await expect(search).toBeFocused();
+  await search.fill("llama");
+  await expect(dialog.getByRole("option")).toHaveCount(0);
+  await expect(dialog).toContainText("No models match");
+  await search.fill("gem");
+  await expect(dialog.getByRole("tablist")).toBeHidden();
+  await expect(dialog.getByRole("option")).toHaveText([/Gemini 3 Pro/]);
+  await panel.screenshot({ path: `${out}/chat-model-search.png` });
+  await search.fill("");
   await dialog.getByRole("tab", { name: "Google" }).click();
   await expect(dialog.getByRole("option")).toHaveText([/Gemini 3 Pro/]);
   await dialog.getByRole("tab", { name: "Anthropic" }).click();

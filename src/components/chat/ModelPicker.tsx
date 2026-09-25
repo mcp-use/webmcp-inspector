@@ -1,8 +1,9 @@
 // Adapted from mcp-use Inspector (chat/providerMeta.tsx, the managed cloud
 // picker in ConfigurationDialog.tsx); see THIRD_PARTY_NOTICES.md.
-import { useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import { Modal } from "../Modal";
+import { Input } from "../ui/input";
 import { cn } from "@/src/lib/utils";
 import {
   MODEL_PROVIDERS,
@@ -51,7 +52,28 @@ export function ModelPicker({
   const shown =
     active ??
     (providers.find((p) => p === selectedProvider) || providers[0] || null);
-  const list = models.filter((m) => m.provider === shown);
+  const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  // showModal() focuses the close button after children mount; take focus back.
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => searchRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  // A search spans every provider; otherwise show the active provider's tab.
+  const searching = terms.length > 0;
+  const list = searching
+    ? models.filter((m) => {
+        const text =
+          `${m.name} ${m.id} ${PROVIDER_LABELS[m.provider as ModelProvider] ?? ""}`.toLowerCase();
+        return terms.every((term) => text.includes(term));
+      })
+    : models.filter((m) => m.provider === shown);
+  const choose = (id: string) => {
+    onSelect(id);
+    setOpen(false);
+  };
 
   return (
     <>
@@ -60,6 +82,7 @@ export function ModelPicker({
         className="model-trigger"
         onClick={() => {
           setActive(null);
+          setQuery("");
           setOpen(true);
         }}
         disabled={disabled}
@@ -80,10 +103,28 @@ export function ModelPicker({
             </p>
           ) : (
             <>
+              <div className="model-search">
+                <Search className="size-3.5" aria-hidden />
+                <Input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter picks the top match.
+                    if (e.key === "Enter" && searching && list[0]) {
+                      e.preventDefault();
+                      choose(list[0].id);
+                    }
+                  }}
+                  placeholder="Search models…"
+                  aria-label="Search models"
+                />
+              </div>
               <div
                 className="provider-tabs"
                 role="tablist"
                 aria-label="Provider"
+                hidden={searching}
               >
                 {providers.map((provider) => (
                   <button
@@ -101,8 +142,17 @@ export function ModelPicker({
               <div
                 className="model-list"
                 role="listbox"
-                aria-label={`${shown ? PROVIDER_LABELS[shown] : ""} models`}
+                aria-label={
+                  searching
+                    ? "Matching models"
+                    : `${shown ? PROVIDER_LABELS[shown] : ""} models`
+                }
               >
+                {list.length === 0 && (
+                  <p className="px-2.5 py-6 text-center text-[12px] text-muted-foreground">
+                    No models match “{query.trim()}”.
+                  </p>
+                )}
                 {list.map((model) => {
                   const isSelected = model.id === selectedId;
                   return (
@@ -111,11 +161,9 @@ export function ModelPicker({
                       type="button"
                       role="option"
                       aria-selected={isSelected}
-                      onClick={() => {
-                        onSelect(model.id);
-                        setOpen(false);
-                      }}
+                      onClick={() => choose(model.id)}
                     >
+                      {searching && <ProviderLogo provider={model.provider} />}
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[12px] font-medium">
                           {modelLabel(model, model.id)}
