@@ -22,6 +22,29 @@ export function shouldPoll(state: {
   return !state.connection || state.connection.api === "unavailable";
 }
 
+/**
+ * Longest a connect attempt may take. The poll waits for the attempt in flight,
+ * so one that never settles (a page whose getTools() never resolves) would
+ * otherwise stop reconnection for good. Generous because executeScript waits
+ * for the document to be idle.
+ */
+export const CONNECT_TIMEOUT_MS = 10_000;
+
+/** Reject when `promise` has not settled within `ms`. The late result is ignored. */
+export function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 /** Other tabs' loads are irrelevant; before the active tab is known, allow the refresh through. */
 export function isActiveTabLoad(
   activeTabId: number | undefined,

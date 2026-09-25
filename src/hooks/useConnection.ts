@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { browser } from "wxt/browser";
 import { connect } from "../lib/bridge";
 import {
+  CONNECT_TIMEOUT_MS,
   isActiveTabLoad,
   refreshStart,
   shouldPoll,
+  withTimeout,
   type RefreshOptions,
 } from "../lib/refresh-policy";
 import type { Connection } from "../lib/types";
@@ -42,7 +44,11 @@ export function useConnection() {
           "Open a website and click the extension toolbar icon to connect.",
         );
       activeTabId.current = tab.id;
-      const next = await connect(tab.id);
+      const next = await withTimeout(
+        connect(tab.id),
+        CONNECT_TIMEOUT_MS,
+        "The page didn’t respond. Retrying…",
+      );
       if (ticket !== generation.current) return;
       current.current = next;
       setConnection((previous) =>

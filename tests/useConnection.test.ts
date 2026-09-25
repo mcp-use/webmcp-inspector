@@ -1,8 +1,9 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import {
   isActiveTabLoad,
   refreshStart,
   shouldPoll,
+  withTimeout,
 } from "../src/lib/refresh-policy";
 import type { Connection } from "../src/lib/types";
 
@@ -53,4 +54,17 @@ it("ignores completed loads from other tabs, but not before the active tab is kn
   expect(isActiveTabLoad(undefined, 7)).toBe(true);
   expect(isActiveTabLoad(7, 7)).toBe(true);
   expect(isActiveTabLoad(7, 8)).toBe(false);
+});
+
+it("times out a connect attempt that never settles", async () => {
+  vi.useFakeTimers();
+  try {
+    const hung = withTimeout(new Promise(() => {}), 1000, "No response");
+    const settled = expect(hung).rejects.toThrow("No response");
+    await vi.advanceTimersByTimeAsync(1000);
+    await settled;
+    await expect(withTimeout(Promise.resolve(7), 1000, "x")).resolves.toBe(7);
+  } finally {
+    vi.useRealTimers();
+  }
 });

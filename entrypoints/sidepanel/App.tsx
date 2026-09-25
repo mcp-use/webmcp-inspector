@@ -222,8 +222,8 @@ export function App() {
                   inspect its tools.
                 </p>
                 <p className="hint">
-                  Allowing all sites lets the panel reconnect on its own,
-                  without clicking the toolbar icon after each site change.
+                  {allSites === false &&
+                    "Allowing all sites lets the panel reconnect on its own, without clicking the toolbar icon after each site change. "}
                   Browser settings pages and the Chrome Web Store cannot be
                   inspected.
                 </p>
@@ -236,9 +236,16 @@ export function App() {
                     variant="primary"
                     size="sm"
                     onClick={() => {
-                      void requestAllSites().then((ok) => {
-                        if (ok) void refresh();
-                      });
+                      setMessage("");
+                      requestAllSites()
+                        .then((ok) => {
+                          if (ok) void refresh();
+                        })
+                        .catch((error: unknown) =>
+                          setMessage(
+                            `Could not request access: ${error instanceof Error ? error.message : String(error)}`,
+                          ),
+                        );
                     }}
                   >
                     Allow on all sites
